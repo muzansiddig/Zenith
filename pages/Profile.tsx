@@ -1,14 +1,15 @@
 
 import React, { useState } from 'react';
 import { useStore } from '../store';
-import { User, MapPin, Clock, Shield, Save, Camera, History } from 'lucide-react';
+import { User, MapPin, Clock, Shield, Save, Camera, History, Calendar, Smartphone } from 'lucide-react';
 
 const Profile = () => {
   const { user, logs, updateProfile } = useStore();
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
-    location: user?.location || '',
+    city: user?.city || '',
+    country: user?.country || '',
   });
 
   if (!user) return null;
@@ -40,6 +41,9 @@ const Profile = () => {
             <div className="flex items-center justify-center gap-2 text-xs text-gray-400 bg-offwhite py-2 px-4 rounded-full mx-auto w-fit">
               <Shield size={12} /> Pro Member
             </div>
+            <div className="mt-4 text-xs text-gray-400 flex items-center justify-center gap-1">
+               <Calendar size={12} /> Joined {new Date(user.createdAt).toLocaleDateString()}
+            </div>
           </div>
 
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-light-lavender space-y-4">
@@ -54,7 +58,7 @@ const Profile = () => {
                <MapPin size={16} className="text-purple" />
                <div className="flex-1">
                  <p className="font-semibold">Location</p>
-                 <p className="text-xs text-gray-400">{user.location}</p>
+                 <p className="text-xs text-gray-400">{user.city}, {user.country}</p>
                </div>
              </div>
           </div>
@@ -65,8 +69,7 @@ const Profile = () => {
           <div className="bg-white p-8 rounded-2xl shadow-sm border border-light-lavender">
             <h3 className="font-bold text-lg mb-6">Personal Information</h3>
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
+              <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Full Name</label>
                   <input 
                     type="text" 
@@ -74,17 +77,29 @@ const Profile = () => {
                     onChange={e => setFormData({...formData, name: e.target.value})}
                     className="w-full p-3 bg-offwhite rounded-xl border border-light-lavender focus:ring-1 focus:ring-purple focus:outline-none"
                   />
-                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Location</label>
+                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">City</label>
                   <input 
                     type="text" 
-                    value={formData.location}
-                    onChange={e => setFormData({...formData, location: e.target.value})}
+                    value={formData.city}
+                    onChange={e => setFormData({...formData, city: e.target.value})}
+                    className="w-full p-3 bg-offwhite rounded-xl border border-light-lavender focus:ring-1 focus:ring-purple focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Country</label>
+                  <input 
+                    type="text" 
+                    value={formData.country}
+                    onChange={e => setFormData({...formData, country: e.target.value})}
                     className="w-full p-3 bg-offwhite rounded-xl border border-light-lavender focus:ring-1 focus:ring-purple focus:outline-none"
                   />
                 </div>
               </div>
+              
               <div>
                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Email Address</label>
                 <input 
@@ -93,7 +108,9 @@ const Profile = () => {
                   disabled
                   className="w-full p-3 bg-gray-50 rounded-xl border border-gray-100 text-gray-400 cursor-not-allowed"
                 />
+                <p className="text-[10px] text-gray-400 mt-1 ml-1">Contact support to change email.</p>
               </div>
+
               <div className="pt-4 flex justify-end">
                 <button 
                   onClick={handleSave}
@@ -106,25 +123,32 @@ const Profile = () => {
           </div>
 
           <div className="bg-white p-8 rounded-2xl shadow-sm border border-light-lavender">
-             <div className="flex items-center gap-2 mb-6">
-                <History className="text-purple" size={20} />
-                <h3 className="font-bold text-lg">Activity Log</h3>
+             <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-2">
+                   <History className="text-purple" size={20} />
+                   <h3 className="font-bold text-lg">Activity Log</h3>
+                </div>
+                <button className="text-xs text-purple font-bold hover:underline">Download CSV</button>
              </div>
              
-             <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+             <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                 {logs.length === 0 ? (
                   <p className="text-gray-400 text-sm text-center py-4">No recent activity.</p>
                 ) : (
                   logs.map(log => (
-                    <div key={log.id} className="flex items-start gap-4 p-3 hover:bg-offwhite rounded-xl transition-colors text-sm">
-                      <div className="w-2 h-2 rounded-full bg-purple mt-2 shrink-0"></div>
-                      <div className="flex-1">
-                        <p className="font-semibold text-gray-900">{log.action}</p>
-                        {log.details && <p className="text-gray-500 text-xs">{log.details}</p>}
+                    <div key={log.id} className="flex items-start gap-4 p-4 border border-light-lavender/50 rounded-xl hover:bg-offwhite transition-colors text-sm group">
+                      <div className="w-8 h-8 rounded-full bg-light-lavender flex items-center justify-center text-purple text-xs font-bold shrink-0 mt-0.5">
+                         {log.action.charAt(0)}
                       </div>
-                      <div className="text-right">
-                        <p className="text-xs text-gray-400">{new Date(log.timestamp).toLocaleDateString()}</p>
-                        <p className="text-[10px] text-gray-300">{new Date(log.timestamp).toLocaleTimeString()}</p>
+                      <div className="flex-1">
+                        <div className="flex justify-between">
+                           <p className="font-semibold text-gray-900">{log.action}</p>
+                           <p className="text-xs text-gray-400">{new Date(log.timestamp).toLocaleString()}</p>
+                        </div>
+                        {log.details && <p className="text-gray-500 text-xs mt-1">{log.details}</p>}
+                        <div className="flex items-center gap-1 mt-2 text-[10px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                           <Smartphone size={10} /> {log.device}
+                        </div>
                       </div>
                     </div>
                   ))

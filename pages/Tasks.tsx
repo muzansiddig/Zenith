@@ -3,7 +3,12 @@ import { useStore } from '../store';
 import { TaskStatus, TaskPriority, Task } from '../types';
 import { Plus, MoreVertical, Calendar, Flag } from 'lucide-react';
 
-const TaskCard = ({ task, onStatusChange }: { task: Task, onStatusChange: (id: string, s: TaskStatus) => void }) => {
+interface TaskCardProps {
+  task: Task;
+  onStatusChange: (id: string, s: TaskStatus) => void;
+}
+
+const TaskCard: React.FC<TaskCardProps> = ({ task, onStatusChange }) => {
   const priorityColors = {
     [TaskPriority.LOW]: 'bg-blue-100 text-blue-700',
     [TaskPriority.MEDIUM]: 'bg-yellow-100 text-yellow-700',

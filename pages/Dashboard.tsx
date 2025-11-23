@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useStore } from '../store';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, BarChart, Bar } from 'recharts';
-import { ArrowUpRight, CheckCircle2, DollarSign, Calendar, Target, Clock } from 'lucide-react';
+import { ArrowUpRight, CheckCircle2, DollarSign, Calendar, Target, Clock, MapPin } from 'lucide-react';
 
 const StatCard = ({ title, value, icon: Icon, change, trend }: { title: string, value: string, icon: any, change: string, trend: 'up' | 'down' }) => (
   <div className="bg-white p-6 rounded-2xl shadow-sm border border-light-lavender hover:shadow-md transition-shadow">
@@ -55,7 +55,6 @@ const Dashboard = () => {
   const totalBalance = transactions.reduce((acc, curr) => curr.type === 'income' ? acc + curr.amount : acc - curr.amount, 0);
   const activeHabits = habits.length;
 
-  // Mock data for charts
   const activityData = [
     { name: 'Mon', tasks: 4, focus: 85 },
     { name: 'Tue', tasks: 6, focus: 90 },
@@ -70,9 +69,15 @@ const Dashboard = () => {
     <div className="space-y-8 animate-fade-in">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-           <div className="flex items-center gap-2 text-purple font-medium mb-1">
-              <Clock size={16} />
-              <span>{currentTime}</span>
+           <div className="flex items-center gap-4 text-purple font-medium mb-1 text-sm">
+              <div className="flex items-center gap-1">
+                 <Clock size={14} />
+                 <span>{currentTime}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                 <MapPin size={14} />
+                 <span>{user?.city}, {user?.country}</span>
+              </div>
            </div>
           <h1 className="text-4xl font-bold font-display text-black mb-2">
             {greeting}, {user?.name?.split(' ')[0]}
@@ -159,22 +164,29 @@ const Dashboard = () => {
             </div>
 
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-light-lavender">
-               <h2 className="text-lg font-bold font-display mb-4">Recent Activity</h2>
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-lg font-bold font-display">Recent Activity</h2>
+                  <span className="text-xs text-purple font-bold bg-purple/10 px-2 py-1 rounded-full">Live Log</span>
+               </div>
                <div className="space-y-4">
                   {logs.slice(0, 5).map(log => (
                      <div key={log.id} className="flex items-center gap-3 p-2 hover:bg-offwhite rounded-lg transition-colors">
-                        <div className="w-8 h-8 rounded-full bg-light-lavender flex items-center justify-center text-purple text-xs font-bold">
+                        <div className="w-8 h-8 rounded-full bg-light-lavender flex items-center justify-center text-purple text-xs font-bold shrink-0">
                            {log.action.charAt(0)}
                         </div>
                         <div className="flex-1">
                            <p className="text-sm font-semibold text-gray-900">{log.action}</p>
                            {log.details && <p className="text-xs text-gray-500">{log.details}</p>}
                         </div>
-                        <span className="text-[10px] text-gray-400">
-                           {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </span>
+                        <div className="text-right">
+                          <span className="block text-[10px] text-gray-400">
+                             {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                          <span className="block text-[8px] text-gray-300 uppercase">{log.device.split('-')[0]}</span>
+                        </div>
                      </div>
                   ))}
+                  {logs.length === 0 && <p className="text-sm text-gray-400 text-center py-4">No activity yet.</p>}
                </div>
             </div>
         </div>

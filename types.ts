@@ -63,7 +63,8 @@ export interface User {
   email: string;
   avatar: string;
   timezone: string;
-  location: string;
+  city: string;
+  country: string;
   createdAt: string;
   preferences: {
     theme: 'light' | 'dark';
@@ -74,17 +75,18 @@ export interface User {
 export interface ActivityLog {
   id: string;
   userId: string;
-  action: string;
+  action: string; // e.g., 'Login', 'Create Task', 'Update Profile'
   details?: string;
   timestamp: string;
-  device: string;
+  device: string; // e.g., 'Chrome on Desktop'
 }
 
 export interface Notification {
   id: string;
   title: string;
   message: string;
-  type: 'info' | 'success' | 'warning' | 'error';
-  timestamp: string;
+  type: 'info' | 'success' | 'warning' | 'error' | 'reminder';
+  timestamp: string; // When the notification was created/scheduled
+  scheduledFor?: string; // For future reminders
   read: boolean;
 }

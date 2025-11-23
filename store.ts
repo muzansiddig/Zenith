@@ -11,6 +11,7 @@ interface AppState {
   login: (email: string, password: string) => Promise<boolean>;
   register: (name: string, email: string, password: string) => Promise<boolean>;
   logout: () => void;
+  forgotPassword: (email: string) => Promise<void>;
   updateProfile: (data: Partial<User>) => void;
   
   // Data
@@ -27,20 +28,43 @@ interface AppState {
   updateTaskStatus: (id: string, status: TaskStatus) => void;
   toggleHabit: (id: string, date: string) => void;
   addTransaction: (transaction: Transaction) => void;
+  
+  // Notification Actions
   addNotification: (notification: Omit<Notification, 'id' | 'read' | 'timestamp'>) => void;
+  createReminder: (title: string, message: string, date: string) => void;
   markNotificationRead: (id: string) => void;
   clearNotifications: () => void;
 }
 
-// Helper for Mock Logging
+// Helper: Get Device Info
+const getDeviceInfo = () => {
+  const ua = navigator.userAgent;
+  const isMobile = /Mobile|Android|iP(ad|hone)/.test(ua);
+  return `${isMobile ? 'Mobile' : 'Desktop'} - ${navigator.platform}`;
+};
+
+// Helper: Create Log Entry
 const createLog = (userId: string, action: string, details: string = ''): ActivityLog => ({
   id: Math.random().toString(36).substr(2, 9),
   userId,
   action,
   details,
   timestamp: new Date().toISOString(),
-  device: navigator.userAgent.includes('Mobile') ? 'Mobile' : 'Desktop - Chrome',
+  device: getDeviceInfo(),
 });
+
+// Helper: Fetch Location (Simulated for reliability in demo, but code structure is real)
+const fetchLocation = async (): Promise<{ city: string, country: string }> => {
+  try {
+    // In a real app, use a service like ipapi.co
+    // const res = await fetch('https://ipapi.co/json/');
+    // const data = await res.json();
+    // return { city: data.city, country: data.country_name };
+    return { city: 'New York', country: 'USA' }; // Fallback/Mock
+  } catch {
+    return { city: 'Unknown City', country: 'Unknown Country' };
+  }
+};
 
 export const useStore = create<AppState>()(
   persist(
@@ -64,17 +88,19 @@ export const useStore = create<AppState>()(
       // --- Auth Actions ---
 
       login: async (email, password) => {
-        // Mock API Call
-        await new Promise(resolve => setTimeout(resolve, 800)); // Simulate network delay
+        await new Promise(resolve => setTimeout(resolve, 800)); // Simulate API delay
         
         if (email && password) {
+          // Mock User Retrieval
+          const locationData = await fetchLocation();
           const mockUser: User = {
             id: 'u-123',
             name: email.split('@')[0],
             email,
             avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
             timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-            location: 'New York, USA', // Mock location
+            city: locationData.city,
+            country: locationData.country,
             createdAt: new Date().toISOString(),
             preferences: { theme: 'light', emailNotifications: true }
           };
@@ -83,7 +109,7 @@ export const useStore = create<AppState>()(
             user: mockUser,
             isAuthenticated: true,
             token: 'mock-jwt-token-123',
-            logs: [createLog(mockUser.id, 'Login', 'User logged in successfully'), ...state.logs],
+            logs: [createLog(mockUser.id, 'Login', 'Successful login'), ...state.logs],
             notifications: [{ 
               id: Date.now().toString(), 
               title: 'Welcome Back!', 
@@ -101,13 +127,15 @@ export const useStore = create<AppState>()(
       register: async (name, email, password) => {
         await new Promise(resolve => setTimeout(resolve, 800));
         
+        const locationData = await fetchLocation();
         const mockUser: User = {
           id: `u-${Math.random().toString(36).substr(2, 5)}`,
           name,
           email,
           avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`,
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-          location: 'Detected via IP',
+          city: locationData.city,
+          country: locationData.country,
           createdAt: new Date().toISOString(),
           preferences: { theme: 'light', emailNotifications: true }
         };
@@ -117,10 +145,10 @@ export const useStore = create<AppState>()(
           isAuthenticated: true,
           token: 'mock-jwt-token-new',
           logs: [createLog(mockUser.id, 'Register', 'Account created'), ...state.logs],
-           notifications: [{ 
+          notifications: [{ 
               id: Date.now().toString(), 
               title: 'Welcome to Zenith', 
-              message: 'Your account has been set up successfully.', 
+              message: 'Your account setup is complete.', 
               type: 'info', 
               read: false, 
               timestamp: new Date().toISOString() 
@@ -135,20 +163,26 @@ export const useStore = create<AppState>()(
           user: null,
           isAuthenticated: false,
           token: null,
-          logs: [createLog(userId, 'Logout'), ...state.logs]
+          logs: [createLog(userId, 'Logout', 'User logged out'), ...state.logs]
         };
       }),
+
+      forgotPassword: async (email) => {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        // In a real app, trigger backend email service
+        console.log(`Password reset email sent to ${email}`);
+      },
 
       updateProfile: (data) => set((state) => {
         if (!state.user) return state;
         const updatedUser = { ...state.user, ...data };
         return {
           user: updatedUser,
-          logs: [createLog(state.user.id, 'Profile Update', Object.keys(data).join(', ')), ...state.logs],
+          logs: [createLog(state.user.id, 'Profile Update', `Updated: ${Object.keys(data).join(', ')}`), ...state.logs],
           notifications: [{
              id: Date.now().toString(),
              title: 'Profile Updated',
-             message: 'Your changes have been saved.',
+             message: 'Your profile changes have been saved.',
              type: 'info',
              read: false,
              timestamp: new Date().toISOString()
@@ -165,7 +199,7 @@ export const useStore = create<AppState>()(
 
       updateTaskStatus: (id, status) => set((state) => ({
         tasks: state.tasks.map((t) => (t.id === id ? { ...t, status } : t)),
-        // Optional: reduce log noise by not logging every status change or log it if critical
+        logs: state.user ? [createLog(state.user.id, 'Update Task', `Task ${id} moved to ${status}`), ...state.logs] : state.logs
       })),
 
       toggleHabit: (id, date) => set((state) => ({
@@ -175,25 +209,46 @@ export const useStore = create<AppState>()(
             const newCompletedDates = isCompleted
               ? h.completedDates.filter((d) => d !== date)
               : [...h.completedDates, date];
+            const newStreak = isCompleted ? Math.max(0, h.streak - 1) : h.streak + 1;
             
-            // Check for streak reward
-            const newStreak = isCompleted ? h.streak - 1 : h.streak + 1;
-            
-            return { ...h, completedDates: newCompletedDates, streak: Math.max(0, newStreak) };
+            // Log streak milestones
+            if (!isCompleted && newStreak % 5 === 0 && state.user) {
+               get().addNotification({
+                 title: 'Habit Streak! 🔥',
+                 message: `You've hit a ${newStreak} day streak on ${h.name}!`,
+                 type: 'success'
+               });
+            }
+
+            return { ...h, completedDates: newCompletedDates, streak: newStreak };
           }
           return h;
         }),
+        logs: state.user ? [createLog(state.user.id, 'Toggle Habit', `Habit ${id} toggled for ${date}`), ...state.logs] : state.logs
       })),
 
       addTransaction: (tx) => set((state) => ({ 
         transactions: [...state.transactions, tx],
-        logs: state.user ? [createLog(state.user.id, 'Add Transaction', `$${tx.amount} - ${tx.description}`), ...state.logs] : state.logs
+        logs: state.user ? [createLog(state.user.id, 'Add Transaction', `${tx.type.toUpperCase()}: $${tx.amount} - ${tx.description}`), ...state.logs] : state.logs
       })),
 
       // --- Notifications ---
 
       addNotification: (n) => set((state) => ({
         notifications: [{ ...n, id: Date.now().toString(), read: false, timestamp: new Date().toISOString() }, ...state.notifications]
+      })),
+
+      createReminder: (title, message, date) => set((state) => ({
+         notifications: [{
+            id: Date.now().toString(),
+            title: `Reminder: ${title}`,
+            message,
+            type: 'reminder',
+            read: false,
+            timestamp: new Date().toISOString(),
+            scheduledFor: date
+         }, ...state.notifications],
+         logs: state.user ? [createLog(state.user.id, 'Create Reminder', `${title} set for ${date}`), ...state.logs] : state.logs
       })),
 
       markNotificationRead: (id) => set((state) => ({
@@ -203,8 +258,8 @@ export const useStore = create<AppState>()(
       clearNotifications: () => set({ notifications: [] })
     }),
     {
-      name: 'zenith-storage', // unique name
-      storage: createJSONStorage(() => localStorage), // persist to local storage
+      name: 'zenith-storage-v1',
+      storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({ 
          user: state.user, 
          isAuthenticated: state.isAuthenticated, 

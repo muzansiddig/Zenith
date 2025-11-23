@@ -2,12 +2,16 @@
 import React, { useState } from 'react';
 import { useStore } from '../store';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, ArrowRight } from 'lucide-react';
+import { Loader2, ArrowRight, ArrowLeft } from 'lucide-react';
+
+type ViewState = 'login' | 'register' | 'forgot-password';
 
 const Auth = () => {
-  const [isLogin, setIsLogin] = useState(true);
+  const [view, setView] = useState<ViewState>('login');
   const [loading, setLoading] = useState(false);
-  const { login, register } = useStore();
+  const [message, setMessage] = useState<{ text: string, type: 'error' | 'success' } | null>(null);
+  
+  const { login, register, forgotPassword } = useStore();
   const navigate = useNavigate();
 
   // Form State
@@ -18,19 +22,40 @@ const Auth = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setMessage(null);
     
     try {
-      if (isLogin) {
-        await login(email, password);
-      } else {
-        await register(name, email, password);
+      if (view === 'login') {
+        const success = await login(email, password);
+        if (success) navigate('/');
+        else setMessage({ text: 'Invalid credentials', type: 'error' });
+      } else if (view === 'register') {
+        const success = await register(name, email, password);
+        if (success) navigate('/');
+        else setMessage({ text: 'Registration failed', type: 'error' });
+      } else if (view === 'forgot-password') {
+        await forgotPassword(email);
+        setMessage({ text: 'Reset link sent to your email.', type: 'success' });
+        setTimeout(() => setView('login'), 2000);
       }
-      navigate('/');
     } catch (error) {
       console.error(error);
+      setMessage({ text: 'An unexpected error occurred', type: 'error' });
     } finally {
       setLoading(false);
     }
+  };
+
+  const titles = {
+    'login': 'Welcome Back',
+    'register': 'Create Account',
+    'forgot-password': 'Reset Password'
+  };
+
+  const subtitles = {
+    'login': 'Enter your details to access your workspace.',
+    'register': 'Start your journey to better productivity today.',
+    'forgot-password': "Enter your email and we'll send you a reset link."
   };
 
   return (
@@ -63,21 +88,36 @@ const Auth = () => {
         </div>
 
         {/* Right Side: Form */}
-        <div className="p-12 flex flex-col justify-center">
-          <h2 className="text-3xl font-bold font-display text-black mb-2">
-            {isLogin ? 'Welcome Back' : 'Create Account'}
+        <div className="p-12 flex flex-col justify-center relative">
+          {view !== 'login' && (
+             <button 
+               onClick={() => { setView('login'); setMessage(null); }}
+               className="absolute top-8 left-8 text-gray-400 hover:text-black transition-colors"
+             >
+               <ArrowLeft size={24} />
+             </button>
+          )}
+
+          <h2 className="text-3xl font-bold font-display text-black mb-2 transition-all">
+            {titles[view]}
           </h2>
-          <p className="text-gray-500 mb-8">
-            {isLogin ? 'Enter your details to access your workspace.' : 'Start your journey to better productivity today.'}
+          <p className="text-gray-500 mb-8 transition-all">
+            {subtitles[view]}
           </p>
 
+          {message && (
+            <div className={`mb-6 p-3 rounded-xl text-sm font-medium ${message.type === 'error' ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'}`}>
+              {message.text}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
-            {!isLogin && (
+            {view === 'register' && (
               <div>
                 <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Full Name</label>
                 <input 
                   type="text" 
-                  required={!isLogin}
+                  required
                   className="w-full bg-offwhite border border-light-lavender rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple transition-all"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -96,16 +136,29 @@ const Auth = () => {
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Password</label>
-              <input 
-                type="password" 
-                required
-                className="w-full bg-offwhite border border-light-lavender rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple transition-all"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
+            {view !== 'forgot-password' && (
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <label className="block text-xs font-bold text-gray-700 uppercase">Password</label>
+                  {view === 'login' && (
+                    <button 
+                      type="button" 
+                      onClick={() => { setView('forgot-password'); setMessage(null); }}
+                      className="text-xs text-purple font-semibold hover:underline"
+                    >
+                      Forgot?
+                    </button>
+                  )}
+                </div>
+                <input 
+                  type="password" 
+                  required
+                  className="w-full bg-offwhite border border-light-lavender rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple transition-all"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+            )}
 
             <div className="pt-4">
               <button 
@@ -114,21 +167,23 @@ const Auth = () => {
                 className="w-full bg-black text-white rounded-xl py-4 font-bold text-lg hover:bg-purple transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-70"
               >
                 {loading && <Loader2 className="animate-spin" size={20} />}
-                {isLogin ? 'Sign In' : 'Get Started'}
+                {view === 'login' ? 'Sign In' : view === 'register' ? 'Get Started' : 'Send Link'}
                 {!loading && <ArrowRight size={20} />}
               </button>
             </div>
           </form>
 
-          <div className="mt-8 text-center text-sm text-gray-500">
-            {isLogin ? "Don't have an account?" : "Already have an account?"}
-            <button 
-              onClick={() => setIsLogin(!isLogin)}
-              className="ml-2 font-bold text-purple hover:underline"
-            >
-              {isLogin ? 'Sign up free' : 'Log in'}
-            </button>
-          </div>
+          {view === 'login' && (
+            <div className="mt-8 text-center text-sm text-gray-500">
+              Don't have an account?
+              <button 
+                onClick={() => { setView('register'); setMessage(null); }}
+                className="ml-2 font-bold text-purple hover:underline"
+              >
+                Sign up free
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
