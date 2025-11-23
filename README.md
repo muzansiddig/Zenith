@@ -1,20 +1,39 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
 
-# Run and deploy your AI Studio app
+# **Zenith / OrganizeMe – Smart AI Productivity Platform**
 
-This contains everything you need to run your app locally.
+## 🌟 Project Overview
 
-View your app in AI Studio: https://ai.studio/apps/drive/1Hp-kB8_Yy4zVpzfr9_TU-dNO6Q1NkrrR
-
-## Run Locally
-
-**Prerequisites:**  Node.js
+**Zenith (OrganizeMe)** is a **full-stack SaaS web application** designed to help students, freelancers, and content creators manage their daily lives intelligently using AI.
+The platform includes task management, habit tracking, budget planning, AI-powered template generation, a digital template marketplace, and a fully-featured dashboard.
 
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+---
+
+## 🚀 Key Features 
+
+* **Professional Dashboard:** Daily tasks, habit overview, weekly analytics, financial logs, AI suggestions.
+* **Task Manager:** Kanban board, calendar view, reminders, export to PDF/Excel.
+* **Habit Tracker:** Track daily/weekly habits, gamification rewards after 30 days of consistency.
+* **Budget Planner:** Track income & expenses, charts, monthly comparison, generate PDF/Excel reports.
+* **Digital Template Marketplace:** Preview templates, direct purchase, download links, add to favorites.
+* **AI Template Builder:** Convert user descriptions into JSON + Google Sheets + ready-to-download Excel with formulas, colors, and layouts.
+* **Internal Template Designer:** Design tables like Notion/Excel, add texts, colors, formulas, save & share templates.
+* **Authentication & Security:** JWT Auth, Google OAuth, Email verification, Password reset, Rate limiting.
+* **Analytics System:** Productivity index, spending patterns, habit completion %, AI recommendations.
+* **Settings Page:** Theme change, profile picture upload, Google Drive sync, support for EN/AR languages.
+
+---
+
+## 🧱 Tech Stack
+
+* **Frontend:** Next.js 15 + React + TypeScript + TailwindCSS + Framer Motion + Zustand + Recharts
+* **Backend:** NestJS + REST API + JWT Auth + Google Drive & Sheets API + OpenAI API + Stripe/Paymob
+* **Database:** MongoDB + Mongoose + Redis (optional)
+* **Storage:** AWS S3
+
+
+
+## 📄 License
+
+This project is licensed under **MIT License**.
+؟
